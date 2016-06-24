@@ -1,4 +1,4 @@
-package segy
+package segygo
 
 import (
 	"bytes"
@@ -47,12 +47,23 @@ type BinHeader struct {
 }
 
 type TraceHeader struct {
-	tull		int32
+	TraceSeqInData		int32
+	TraceSeqInFile		int32
+	OrigRecNumber		int32
+	OrigTraceNum		int32
+	SourceNum			int32
+	EnsembleNum			int32
+	TraceSeqInEnsemble	int32
+	TraceId				int16
+	_					int16
+	Fold				int16
+	Dum1				int16
+	Offset				int32
 }
 
 type Trace struct {
 	TraceHeader
-	Data		*byte
+	Data		[]float32
 }
 
 type SegyFile struct {
@@ -90,12 +101,12 @@ func OpenFile(filename string) (SegyFile, error) {
 	s.file = file
 
 	s.Header = binHdr
-	s.NrTraces = s.getNrTraces()
+	s.NrTraces = s.GetNrTraces()
 
 	return s, err
 }
 
-func (s *SegyFile) getNrTraces() int64 {
+func (s *SegyFile) GetNrTraces() int64 {
 	fi, err := s.file.Stat()
 	if err != nil {
 		fmt.Println("unable to get Stat()")
@@ -109,7 +120,7 @@ func (s *SegyFile) getNrTraces() int64 {
 	return nTraces
 }
 
-func (s *SegyFile) getNrSamples() int32 {
+func (s *SegyFile) GetNrSamples() int32 {
 	return int32(s.Header.Hns)
 }
 
@@ -117,7 +128,37 @@ func (s *SegyFile) ReadTrace() (Trace, error) {
 	// First read the TraceHeader
 	//data := []byte{}
 	//data = append(data, 
+	trace := Trace{}
+	traceBuff := make([]float32, s.GetNrSamples())
+	byteBuff := make([]byte, s.GetNrSamples() * 4)
+	trace.Data = traceBuff
+
+	trcHdrBuff := make([]byte, SEGY_TRACE_HDR_LEN)
+	bytesRead, err := s.file.Read(trcHdrBuff)
+	if err != nil {
+		log.Fatal(err)
+		return trace, err
+	}
+
+	trcHdrReader := bytes.NewReader(trcHdrBuff)
+	err = binary.Read(trcHdrReader, binary.BigEndian, &trace.TraceHeader)
+	if err != nil {
+		log.Fatal(err)
+		return trace, err
+	}
+
+	bytesRead, err = s.file.Read(byteBuff)
+	if err != nil {
+		log.Fatal(err)
+		return trace, err
+	}
+
+	for i := range trace.Data {
+		trace.Data[i] = float32(binary.BigEndian.Uint32(byteBuff[i*4 : (i+1)*4]))
+	}
+
+	log.Println("ReadTrace read ", bytesRead, " bytes")
 
 	// Then figure out the size of the data, and read it
-	return Trace{}, nil
+	return trace, nil
 }
