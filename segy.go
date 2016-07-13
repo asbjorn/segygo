@@ -3,10 +3,10 @@ package segygo
 import (
 	"bytes"
 	"encoding/binary"
-	"io/ioutil"
-	"os"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 	"unsafe"
 )
 
@@ -16,67 +16,66 @@ const SEGY_BIN_HDR_LEN = 400
 const SEGY_TRACE_HDR_LEN = 240
 
 type BinHeader struct {
-	Jobid		int32
-	Lino		int32
-	Reno		int32
-	Ntrpr		int16
-	Nart		int16
-	Hdt			uint16
-	Dto			uint16
-	Hns			uint16
-	Nso			uint16
-	Format		int16
-	Fold		int16
-	Tsort		int16
-	Vscode		int16
-	Hsfs		int16
-	Hsfe		int16
-	Hslen		int16
-	Hstyp		int16
-	Schn		int16
-	Hstas		int16
-	Hstae		int16
-	Htatyp		int16
-	Hcorr		int16
-	Bgrcv		int16
-	Rcvm		int16
-	Mfeet		int16
-	Polyt		int16
-	Vgpol		int16
-	Hunass		[170]int16 // unassigned
+	Jobid, Lino, Reno                                                                                                          int32
+	Ntrpr, Nart                                                                                                                int16
+	Hdt, Dto, Hns, Nso                                                                                                         uint16
+	Format, Fold, Tsort, Vscode, Hsfs, Hsfe, Hslen, Hstyp, Schn, Hstas, Hstae, Htatyp, Hcorr, Bgrcv, Rcvm, Mfeet, Polyt, Vgpol int16
+	Hunass                                                                                                                     [170]int16 // unassigned
 }
 
 type TraceHeader struct {
-	TraceSeqInData		int32
-	TraceSeqInFile		int32
-	OrigRecNumber		int32
-	OrigTraceNum		int32
-	SourceNum			int32
-	EnsembleNum			int32
-	TraceSeqInEnsemble	int32
-	TraceId				int16
-	_					int16
-	Fold				int16
-	Dum1				int16
-	Offset				int32
+	Tracel                                                                                                                                                                                           int32
+	Tracer                                                                                                                                                                                           int32
+	Fldr                                                                                                                                                                                             int32
+	Tracf                                                                                                                                                                                            int32
+	Ep                                                                                                                                                                                               int32
+	CDP                                                                                                                                                                                              int32
+	CDPT                                                                                                                                                                                             int32
+	Trid                                                                                                                                                                                             int16
+	Nvs                                                                                                                                                                                              int16
+	Nhs                                                                                                                                                                                              int16
+	Duse                                                                                                                                                                                             int16
+	Offset                                                                                                                                                                                           int32
+	Gelev                                                                                                                                                                                            int32
+	Selev                                                                                                                                                                                            int32
+	Sdepth                                                                                                                                                                                           int32
+	Gdel                                                                                                                                                                                             int32
+	Sdel                                                                                                                                                                                             int32
+	SwDep                                                                                                                                                                                            int32
+	GwDep                                                                                                                                                                                            int32
+	Scalel                                                                                                                                                                                           int16
+	Scalco                                                                                                                                                                                           int16
+	Sx                                                                                                                                                                                               int32
+	Sy                                                                                                                                                                                               int32
+	Gx                                                                                                                                                                                               int32
+	Gy                                                                                                                                                                                               int32
+	CoUnit                                                                                                                                                                                           int16
+	WeVel                                                                                                                                                                                            int16
+	SweVel                                                                                                                                                                                           int16
+	Sut, Gut, Sstat, Gstat, Tstat, Laga, Lagb, Delrt, Muts, Mute                                                                                                                                     int16
+	Ns, Dt                                                                                                                                                                                           uint16
+	Gain, Igc, Igi, Corr, Sfs, Sfe, Slen, Styp, Stas, Stae, Tatyp, Afilf, Afils, NoFilf, NoFils, Lcf, Hcf, Lcs, Hcs, Year, Day, Hour, Minute, Sec, Timbas, Trwf, Grnors, Grnofr, Grnlof, Gaps, Otrav int16
+	D1, F1, D2, F2, Ungpow, Unscale                                                                                                                                                                  float32
+	Ntr                                                                                                                                                                                              int32
+	Mark, Shortpad                                                                                                                                                                                   int16
+	Unass                                                                                                                                                                                            [14]int16 // unassigned short array
 }
 
 type Trace struct {
 	TraceHeader
-	Data		[]float32
+	Data []float32
 }
 
 type SegyFile struct {
 	Filename string
-	Header	BinHeader
+	Header   BinHeader
 	NrTraces int64
-	file 	*os.File
+	file     *os.File
 }
 
-
 func OpenFile(filename string) (SegyFile, error) {
-	var s SegyFile;
-	var binHdr BinHeader;
+	var s SegyFile
+	var binHdr BinHeader
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return s, err
@@ -115,7 +114,7 @@ func (s *SegyFile) GetNrTraces() int64 {
 	size := fi.Size()
 	nSamples := s.Header.Hns
 	txtAndBinarySize := int64(SEGY_DESC_HDR_LEN + SEGY_BIN_HDR_LEN)
-	nTraces := ((size - txtAndBinarySize) / (int64(SEGY_TRACE_HDR_LEN) + int64(nSamples) * int64(unsafe.Sizeof(float32(1)))))
+	nTraces := ((size - txtAndBinarySize) / (int64(SEGY_TRACE_HDR_LEN) + int64(nSamples)*int64(unsafe.Sizeof(float32(1)))))
 
 	return nTraces
 }
@@ -127,10 +126,10 @@ func (s *SegyFile) GetNrSamples() int32 {
 func (s *SegyFile) ReadTrace() (Trace, error) {
 	// First read the TraceHeader
 	//data := []byte{}
-	//data = append(data, 
+	//data = append(data,
 	trace := Trace{}
 	traceBuff := make([]float32, s.GetNrSamples())
-	byteBuff := make([]byte, s.GetNrSamples() * 4)
+	byteBuff := make([]byte, s.GetNrSamples()*4)
 	trace.Data = traceBuff
 
 	trcHdrBuff := make([]byte, SEGY_TRACE_HDR_LEN)
