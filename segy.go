@@ -83,6 +83,32 @@ type SegyFile struct {
 	LogLevel logging.Level
 }
 
+func CreateFile(filename string) (SegyFile, error) {
+	var s SegyFile
+	var binHdr BinHeader
+	b, err := os.Create(filename)
+
+	if err != nil {
+		return s, err
+	}
+
+	s.Filename = filename
+	s.LogLevel = logging.WARNING
+
+	// Setup proper logging
+	backend1 := logging.NewLogBackend(os.Stderr, "", 0)
+	backend1Formatter := logging.NewBackendFormatter(backend1, format)
+	logging.SetBackend(backend1Formatter)
+	logging.SetLevel(s.LogLevel, "")
+
+
+	s.Header = binHdr
+	s.NrTraces = 0
+
+	return s, err
+
+}
+
 func OpenFile(filename string) (SegyFile, error) {
 	var s SegyFile
 	var binHdr BinHeader
@@ -98,7 +124,7 @@ func OpenFile(filename string) (SegyFile, error) {
 	backend1 := logging.NewLogBackend(os.Stderr, "", 0)
 	backend1Formatter := logging.NewBackendFormatter(backend1, format)
 	logging.SetBackend(backend1Formatter)
-	logging.SetLevel(logging.WARNING, "")
+	logging.SetLevel(s.LogLevel, "")
 
 	accum := []byte{}
 	accum = append(accum, b...)
@@ -198,8 +224,6 @@ func (s *SegyFile) ReadTrace() (Trace, error) {
 	for i := range trace.Data {
 		trace.Data[i] = float32(binary.BigEndian.Uint32(byteBuff[i*4 : (i+1)*4]))
 	}
-
-	//log.Println("ReadTrace read ", bytesRead, " bytes")
 
 	// Then figure out the size of the data, and read it
 	return trace, nil
