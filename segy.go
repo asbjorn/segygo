@@ -80,16 +80,10 @@ type SegyFile struct {
 	NrTraces int64
 	file     *os.File
 	Position int64
+	LogLevel logging.Level
 }
 
 func OpenFile(filename string) (SegyFile, error) {
-	// Setup proper logging
-	//backend1 := logging.NewLogBackend(os.Stdout, "", 0)
-	//backend1Formatter := logging.NewBackendFormatter(backend1, format)
-	//backend1Leveled := logging.AddModuleLevel(backend1)
-	//backend1Leveled.SetLevel(logging.INFO, "")
-	//logging.SetBackend(backend1Leveled, backend1Formatter)
-
 	var s SegyFile
 	var binHdr BinHeader
 	b, err := ioutil.ReadFile(filename)
@@ -98,14 +92,20 @@ func OpenFile(filename string) (SegyFile, error) {
 	}
 
 	s.Filename = filename
+	s.LogLevel = logging.WARNING
+
+	// Setup proper logging
+	backend1 := logging.NewLogBackend(os.Stderr, "", 0)
+	backend1Formatter := logging.NewBackendFormatter(backend1, format)
+	logging.SetBackend(backend1Formatter)
+	logging.SetLevel(logging.WARNING, "")
 
 	accum := []byte{}
 	accum = append(accum, b...)
 
 	accum2 := accum[3200:]
 	r := bytes.NewReader(accum2)
-	//fmt.Println("Number of bytes:", r.Len())
-	log.Infof("Number of bytes: %d", r.Len())
+	log.Debugf("Number of bytes: %d", r.Len())
 
 	if err = binary.Read(r, binary.BigEndian, &binHdr); err != nil {
 		log.Errorf("Error reading segy file (bigendian). %s", err)
@@ -122,10 +122,22 @@ func OpenFile(filename string) (SegyFile, error) {
 	return s, err
 }
 
+func (s *SegyFile) SetVerbose(verbose bool) {
+
+	if verbose {
+		s.LogLevel = logging.DEBUG
+		logging.SetLevel(s.LogLevel, "")
+	} else {
+		s.LogLevel = logging.WARNING
+		logging.SetLevel(s.LogLevel, "")
+	}
+
+}
+
 func (s *SegyFile) GetNrTraces() int64 {
 	fi, err := s.file.Stat()
 	if err != nil {
-		log.Error("unable to get Stat()")
+		log.Warning("unable to get Stat()")
 		log.Fatal(err)
 	}
 	size := fi.Size()
@@ -140,11 +152,17 @@ func (s *SegyFile) GetNrSamples() int32 {
 	return int32(s.Header.Hns)
 }
 
-func (s *SegyFile) PrintBinaryHeader() {
+func (s *SegyFile) GetHeader() map[string]interface{} {
+	m := make(map[string]interface{})
 	v := reflect.ValueOf(s.Header)
 	for i := 0; i < v.NumField(); i++ {
-		log.Infof("name = %s, value = %d", v.Type().Field(i).Name, v.Field(i).Interface())
+		key := v.Type().Field(i).Name
+		val := v.Field(i).Interface()
+		log.Debugf("name = %s, value = %d", key, val)
+		m[key] = val
 	}
+
+	return m
 }
 
 func (s *SegyFile) ReadTrace() (Trace, error) {
