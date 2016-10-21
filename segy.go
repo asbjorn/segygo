@@ -3,11 +3,17 @@ package segygo
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"io/ioutil"
-	"log"
+	//"log"
 	"os"
 	"unsafe"
+	"reflect"
+	"github.com/op/go-logging"
+)
+
+var log = logging.MustGetLogger("segygo")
+var format = logging.MustStringFormatter(
+	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 )
 
 const Version = "0.1"
@@ -73,9 +79,17 @@ type SegyFile struct {
 	Header   BinHeader
 	NrTraces int64
 	file     *os.File
+	Position int64
 }
 
 func OpenFile(filename string) (SegyFile, error) {
+	// Setup proper logging
+	//backend1 := logging.NewLogBackend(os.Stdout, "", 0)
+	//backend1Formatter := logging.NewBackendFormatter(backend1, format)
+	//backend1Leveled := logging.AddModuleLevel(backend1)
+	//backend1Leveled.SetLevel(logging.INFO, "")
+	//logging.SetBackend(backend1Leveled, backend1Formatter)
+
 	var s SegyFile
 	var binHdr BinHeader
 	b, err := ioutil.ReadFile(filename)
@@ -90,10 +104,11 @@ func OpenFile(filename string) (SegyFile, error) {
 
 	accum2 := accum[3200:]
 	r := bytes.NewReader(accum2)
-	fmt.Println("Number of bytes:", r.Len())
+	//fmt.Println("Number of bytes:", r.Len())
+	log.Infof("Number of bytes: %d", r.Len())
 
 	if err = binary.Read(r, binary.BigEndian, &binHdr); err != nil {
-		fmt.Println("Error reading segy file (bigendian). ", err)
+		log.Errorf("Error reading segy file (bigendian). %s", err)
 		return s, err
 	}
 
@@ -110,7 +125,7 @@ func OpenFile(filename string) (SegyFile, error) {
 func (s *SegyFile) GetNrTraces() int64 {
 	fi, err := s.file.Stat()
 	if err != nil {
-		fmt.Println("unable to get Stat()")
+		log.Error("unable to get Stat()")
 		log.Fatal(err)
 	}
 	size := fi.Size()
@@ -125,10 +140,14 @@ func (s *SegyFile) GetNrSamples() int32 {
 	return int32(s.Header.Hns)
 }
 
+func (s *SegyFile) PrintBinaryHeader() {
+	v := reflect.ValueOf(s.Header)
+	for i := 0; i < v.NumField(); i++ {
+		log.Infof("name = %s, value = %d", v.Type().Field(i).Name, v.Field(i).Interface())
+	}
+}
+
 func (s *SegyFile) ReadTrace() (Trace, error) {
-	// First read the TraceHeader
-	//data := []byte{}
-	//data = append(data,
 	trace := Trace{}
 	traceBuff := make([]float32, s.GetNrSamples())
 	byteBuff := make([]byte, s.GetNrSamples()*4)
@@ -154,11 +173,15 @@ func (s *SegyFile) ReadTrace() (Trace, error) {
 		return trace, err
 	}
 
+	if bytesRead == 0 {
+		log.Infof("No bytes read for trace #", s.Position)
+	}
+
 	for i := range trace.Data {
 		trace.Data[i] = float32(binary.BigEndian.Uint32(byteBuff[i*4 : (i+1)*4]))
 	}
 
-	log.Println("ReadTrace read ", bytesRead, " bytes")
+	//log.Println("ReadTrace read ", bytesRead, " bytes")
 
 	// Then figure out the size of the data, and read it
 	return trace, nil
