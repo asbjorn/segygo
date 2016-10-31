@@ -149,6 +149,7 @@ func OpenFile(filename string) (SegyFile, error) {
 	// Open and store the os.File object in our struct
 	file, err := os.Open(s.Filename)
 	s.file = file
+	defer file.Close()
 
 	s.Header = binHdr
 	s.NrTraces = s.GetNrTraces()
