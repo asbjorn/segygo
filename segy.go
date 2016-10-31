@@ -101,9 +101,17 @@ func CreateFile(filename string) (SegyFile, error) {
 	logging.SetBackend(backend1Formatter)
 	logging.SetLevel(s.LogLevel, "")
 
+	log.Debugf("Creating SEG-Y file: %s", s.Filename)
 
+	s.Filename = filename
 	s.Header = binHdr
 	s.NrTraces = 0
+	s.file = f
+	s.Position = 0
+
+	accum := make([]byte, 3200)
+	r := bytes.NewWriter(accum)
+	//binary.Write()
 
 	return s, err
 
