@@ -86,13 +86,13 @@ type SegyFile struct {
 func CreateFile(filename string) (SegyFile, error) {
 	var s SegyFile
 	var binHdr BinHeader
-	b, err := os.Create(filename)
+	f, err := os.Create(filename)
+	defer f.Close()
 
 	if err != nil {
 		return s, err
 	}
 
-	s.Filename = filename
 	s.LogLevel = logging.WARNING
 
 	// Setup proper logging
