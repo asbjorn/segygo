@@ -110,8 +110,20 @@ func CreateFile(filename string) (SegyFile, error) {
 	s.Position = 0
 
 	accum := make([]byte, 3200)
-	r := bytes.NewWriter(accum)
+	//r := bytes.NewWriter(accum)
 	//binary.Write()
+	buff := bytes.NewBuffer(accum)
+	if err = binary.Write(buff, binary.BigEndian, &s.Header); err != nil {
+		log.Errorf("Error creating buffer to hold binary header for segy file: %s. Msg: %s", s.Filename, err)
+		return s, err
+	}
+
+	n, err := f.Write(buff.Bytes())
+	if err != nil {
+		log.Errorf("Error writing binary header to segy file: %s. Msg: %s", s.Filename, err)
+		return s, err
+	}
+	log.Debugf("Wrote %d bytes to file: %s", n, s.Filename)
 
 	return s, err
 
@@ -237,3 +249,5 @@ func (s *SegyFile) ReadTrace() (Trace, error) {
 	// Then figure out the size of the data, and read it
 	return trace, nil
 }
+
+//func (s *SegyFile) 
