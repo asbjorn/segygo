@@ -83,6 +83,52 @@ type SegyFile struct {
 	LogLevel logging.Level
 }
 
+func CreateFile(filename string) (SegyFile, error) {
+	var s SegyFile
+	var binHdr BinHeader
+	f, err := os.Create(filename)
+	defer f.Close()
+
+	if err != nil {
+		return s, err
+	}
+
+	s.LogLevel = logging.WARNING
+
+	// Setup proper logging
+	backend1 := logging.NewLogBackend(os.Stderr, "", 0)
+	backend1Formatter := logging.NewBackendFormatter(backend1, format)
+	logging.SetBackend(backend1Formatter)
+	logging.SetLevel(s.LogLevel, "")
+
+	log.Debugf("Creating SEG-Y file: %s", s.Filename)
+
+	s.Filename = filename
+	s.Header = binHdr
+	s.NrTraces = 0
+	s.file = f
+	s.Position = 0
+
+	accum := make([]byte, 3200)
+	//r := bytes.NewWriter(accum)
+	//binary.Write()
+	buff := bytes.NewBuffer(accum)
+	if err = binary.Write(buff, binary.BigEndian, &s.Header); err != nil {
+		log.Errorf("Error creating buffer to hold binary header for segy file: %s. Msg: %s", s.Filename, err)
+		return s, err
+	}
+
+	n, err := f.Write(buff.Bytes())
+	if err != nil {
+		log.Errorf("Error writing binary header to segy file: %s. Msg: %s", s.Filename, err)
+		return s, err
+	}
+	log.Debugf("Wrote %d bytes to file: %s", n, s.Filename)
+
+	return s, err
+
+}
+
 func OpenFile(filename string) (SegyFile, error) {
 	var s SegyFile
 	var binHdr BinHeader
@@ -98,7 +144,7 @@ func OpenFile(filename string) (SegyFile, error) {
 	backend1 := logging.NewLogBackend(os.Stderr, "", 0)
 	backend1Formatter := logging.NewBackendFormatter(backend1, format)
 	logging.SetBackend(backend1Formatter)
-	logging.SetLevel(logging.WARNING, "")
+	logging.SetLevel(s.LogLevel, "")
 
 	accum := []byte{}
 	accum = append(accum, b...)
@@ -115,6 +161,7 @@ func OpenFile(filename string) (SegyFile, error) {
 	// Open and store the os.File object in our struct
 	file, err := os.Open(s.Filename)
 	s.file = file
+	defer file.Close()
 
 	s.Header = binHdr
 	s.NrTraces = s.GetNrTraces()
@@ -199,8 +246,8 @@ func (s *SegyFile) ReadTrace() (Trace, error) {
 		trace.Data[i] = float32(binary.BigEndian.Uint32(byteBuff[i*4 : (i+1)*4]))
 	}
 
-	//log.Println("ReadTrace read ", bytesRead, " bytes")
-
 	// Then figure out the size of the data, and read it
 	return trace, nil
 }
+
+//func (s *SegyFile) 
