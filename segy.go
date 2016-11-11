@@ -132,13 +132,14 @@ func CreateFile(filename string) (SegyFile, error) {
 func OpenFile(filename string) (SegyFile, error) {
 	var s SegyFile
 	var binHdr BinHeader
+
+	s.Filename = filename
+	s.LogLevel = logging.WARNING
+
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return s, err
 	}
-
-	s.Filename = filename
-	s.LogLevel = logging.WARNING
 
 	// Setup proper logging
 	backend1 := logging.NewLogBackend(os.Stderr, "", 0)
