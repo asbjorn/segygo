@@ -22,51 +22,51 @@ const SEGY_BIN_HDR_LEN = 400
 const SEGY_TRACE_HDR_LEN = 240
 
 type BinHeader struct {
-	Jobid, Lino, Reno                                                                                                          int32
-	Ntrpr, Nart                                                                                                                int16
-	Hdt, Dto, Hns, Nso                                                                                                         uint16
+	Jobid, Lino, Reno int32
+	Ntrpr, Nart int16
+	Hdt, Dto, Hns, Nso uint16
 	Format, Fold, Tsort, Vscode, Hsfs, Hsfe, Hslen, Hstyp, Schn, Hstas, Hstae, Htatyp, Hcorr, Bgrcv, Rcvm, Mfeet, Polyt, Vgpol int16
-	Hunass                                                                                                                     [170]int16 // unassigned
+	Hunass [170]int16 // unassigned
 }
 
 type TraceHeader struct {
-	Tracel                                                               int32
-	Tracer                                                               int32
-	Fldr                                                                 int32
-	Tracf                                                                int32
-	Ep                                                                   int32
-	CDP                                                                  int32
-	CDPT                                                                 int32
-	Trid                                                                 int16
-	Nvs                                                                  int16
-	Nhs                                                                  int16
-	Duse                                                                 int16
-	Offset                                                               int32
-	Gelev                                                                int32
-	Selev                                                                int32
-	Sdepth                                                               int32
-	Gdel                                                                 int32
-	Sdel                                                                 int32
-	SwDep                                                                int32
-	GwDep                                                                int32
-	Scalel                                                               int16
-	Scalco                                                               int16
-	Sx                                                                   int32
-	Sy                                                                   int32
-	Gx                                                                   int32
-	Gy                                                                   int32
-	CoUnit                                                               int16
-	WeVel                                                                int16
-	SweVel                                                               int16
-	Sut, Gut, Sstat, Gstat, Tstat, Laga, Lagb, Delrt, Muts, Mute         int16
-	Ns, Dt                                                               uint16
-	Gain, Igc, Igi, Corr, Sfs, Sfe, Slen, Styp, Stas, Stae, Tatyp        int16
-	Afilf, Afils, NoFilf, NoFils, Lcf, Hcf, Lcs, Hcs, Year, Day          int16
+	Tracel int32
+	Tracer int32
+	Fldr int32
+	Tracf int32
+	Ep int32
+	CDP int32
+	CDPT int32
+	Trid int16
+	Nvs int16
+	Nhs int16
+	Duse int16
+	Offset int32
+	Gelev int32
+	Selev int32
+	Sdepth int32
+	Gdel int32
+	Sdel int32
+	SwDep int32
+	GwDep int32
+	Scalel int16
+	Scalco int16
+	Sx int32
+	Sy int32
+	Gx int32
+	Gy int32
+	CoUnit int16
+	WeVel int16
+	SweVel int16
+	Sut, Gut, Sstat, Gstat, Tstat, Laga, Lagb, Delrt, Muts, Mute int16
+	Ns, Dt uint16
+	Gain, Igc, Igi, Corr, Sfs, Sfe, Slen, Styp, Stas, Stae, Tatyp int16
+	Afilf, Afils, NoFilf, NoFils, Lcf, Hcf, Lcs, Hcs, Year, Day int16
 	Hour, Minute, Sec, Timbas, Trwf, Grnors, Grnofr, Grnlof, Gaps, Otrav int16
-	D1, F1, D2, F2, Ungpow, Unscale                                      float32
-	Ntr                                                                  int32
-	Mark, Shortpad                                                       int16
-	Unass                                                                [14]int16 // unassigned short array
+	D1, F1, D2, F2, Ungpow, Unscale float32
+	Ntr int32
+	Mark, Shortpad int16
+	Unass [14]int16 // unassigned short array
 }
 
 type Trace struct {
