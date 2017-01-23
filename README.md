@@ -34,6 +34,16 @@ func main() {
 }
 ```
 
+## Test cases
+
+Simply run the test cases like this:
+```bash
+$ go test
+```
+
+If any test fails then be sure to file a bug report!
+
+
 # Credits
 
 - Asbjørn A. Fellinghaug (asbjorn@fellinghaug.com)
