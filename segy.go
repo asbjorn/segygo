@@ -87,7 +87,7 @@ func CreateFile(filename string) (SegyFile, error) {
 	var s SegyFile
 	var binHdr BinHeader
 	f, err := os.Create(filename)
-	defer f.Close()
+	//defer f.Close()
 
 	if err != nil {
 		return s, err
@@ -162,12 +162,21 @@ func OpenFile(filename string) (SegyFile, error) {
 	// Open and store the os.File object in our struct
 	file, err := os.Open(s.Filename)
 	s.file = file
-	// defer file.Close()
 
 	s.Header = binHdr
 	s.NrTraces = s.GetNrTraces()
 
 	return s, err
+}
+
+func (s *SegyFile) Close() error {
+	err := s.file.Close()
+	if err != nil {
+		log.Errorf("Unable to close segy file: %s", s.Filename)
+		log.Error(err)
+	}
+
+	return err
 }
 
 func (s *SegyFile) SetVerbose(verbose bool) {

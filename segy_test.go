@@ -45,6 +45,7 @@ func createTestFile() {
 
 func TestCreateSegy(t *testing.T) {
 	s, err := CreateFile(filenameOut)
+	defer s.Close()
 	if err != nil {
 		t.Errorf("Unable to create new segy file: %s", s.Filename)
 	}
@@ -55,6 +56,7 @@ func TestCreateSegy(t *testing.T) {
 
 func TestReadSegy(t *testing.T) {
 	s, err := OpenFile(filename)
+	defer s.Close()
 	fmt.Println("SEG-Y file: ", filename)
 	fmt.Println("# traces: ", s.NrTraces)
 	hdr := s.Header
@@ -85,6 +87,7 @@ func TestReadSegy(t *testing.T) {
 
 func TestReadTrace(t *testing.T) {
 	s, err := OpenFile(filename)
+	defer s.Close()
 	if err != nil {
 		t.Errorf("Error reading SEG-Y file: %s", s.Filename)
 	}
