@@ -220,6 +220,7 @@ func (s *SegyFile) ReadTrace() (Trace, error) {
 	trace.Data = traceBuff
 
 	trcHdrBuff := make([]byte, SEGY_TRACE_HDR_LEN)
+	log.Info("trying to read trc hdr")
 	bytesRead, err := s.file.Read(trcHdrBuff)
 	if err != nil {
 		log.Fatal(err)
@@ -233,6 +234,7 @@ func (s *SegyFile) ReadTrace() (Trace, error) {
 		return trace, err
 	}
 
+	log.Info("Reading first trace data")
 	bytesRead, err = s.file.Read(byteBuff)
 	if err != nil {
 		log.Fatal(err)

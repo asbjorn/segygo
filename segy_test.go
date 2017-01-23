@@ -81,9 +81,21 @@ func TestReadSegy(t *testing.T) {
 	//for k,v := range m {
 	//	fmt.Printf("key = %s, value = %d\n", k, v)
 	//}
+}
 
-	//var firstTrace Trace
-	//firstTrace, err = s.ReadTrace()
-	//firstTrace, err = s.ReadTrace()
+func TestReadTrace(t *testing.T) {
+	s, err := OpenFile(filename)
+	if err != nil {
+		t.Errorf("Error reading SEG-Y file: %s", s.Filename)
+	}
 
+	s.SetVerbose(true)
+
+
+	trace, err := s.ReadTrace()
+	if err != nil {
+		t.Error("Unable to read Trace")
+	}
+
+	fmt.Println("tracel:",trace.Tracel)
 }
