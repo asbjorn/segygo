@@ -1,11 +1,11 @@
 package segygo
 
 import (
-	"testing"
 	"flag"
-	"os"
-	"io"
 	"fmt"
+	"io"
+	"os"
+	"testing"
 )
 
 const filename = "/tmp/testSegy.segy"
@@ -18,28 +18,27 @@ func TestMain(m *testing.M) {
 }
 
 func check(err error) {
-    if err != nil {
-        fmt.Println("Error : %s", err.Error())
-        os.Exit(1)
-    }
+	if err != nil {
+		fmt.Println("Error : %s", err.Error())
+		os.Exit(1)
+	}
 }
 
 func createTestFile() {
 	srcFile, err := os.Open("data/qcSOTXCor.segy.f0.k1")
-    defer srcFile.Close()
-    check(err)
+	defer srcFile.Close()
+	check(err)
 
-    destFile, err := os.Create(filename) // creates if file doesn't exist
-    defer destFile.Close()
-    check(err)
+	destFile, err := os.Create(filename) // creates if file doesn't exist
+	defer destFile.Close()
+	check(err)
 
-    _, err = io.Copy(destFile, srcFile) // check first var for number of bytes copied
-    check(err)
+	_, err = io.Copy(destFile, srcFile) // check first var for number of bytes copied
+	check(err)
 
-    err = destFile.Sync()
-    check(err)
+	err = destFile.Sync()
+	check(err)
 }
-
 
 // Test cases under here
 
@@ -85,5 +84,22 @@ func TestReadSegy(t *testing.T) {
 	//var firstTrace Trace
 	//firstTrace, err = s.ReadTrace()
 	//firstTrace, err = s.ReadTrace()
+}
 
+func TestReadFirstTrace(t *testing.T) {
+	s, err := OpenFile(filename)
+	fmt.Println("SEG-Y file: ", filename)
+	fmt.Println("# traces: ", s.NrTraces)
+	trace, err := s.ReadTrace()
+
+	if err != nil {
+		t.Errorf("Exception occured: %v", err)
+	}
+
+	fmt.Println("Got trace")
+	if len(trace.Data) == 0 {
+		t.Fatal("trace.Data got 0 samples!")
+	} else {
+		fmt.Printf("Trace has %d samples..\n", len(trace.Data))
+	}
 }
