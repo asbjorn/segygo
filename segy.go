@@ -159,10 +159,8 @@ func OpenFile(filename string) (SegyFile, error) {
 		return s, err
 	}
 
-	// Open and store the os.File object in our struct
-	file, err := os.Open(s.Filename)
-	s.file = file
-	defer file.Close()
+	// DEPRECATED: Will remove this ref in time
+	s.file = nil
 
 	s.Header = binHdr
 	s.NrTraces = s.GetNrTraces()
@@ -183,7 +181,13 @@ func (s *SegyFile) SetVerbose(verbose bool) {
 }
 
 func (s *SegyFile) GetNrTraces() int64 {
-	fi, err := s.file.Stat()
+	file, err := os.Open(s.Filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	fi, err := file.Stat()
 	if err != nil {
 		log.Warning("unable to get Stat()")
 		log.Fatal(err)
@@ -215,12 +219,21 @@ func (s *SegyFile) GetHeader() map[string]interface{} {
 
 func (s *SegyFile) ReadTrace() (Trace, error) {
 	trace := Trace{}
+
+	// Open file
+	file, err := os.Open(s.Filename)
+	if err != nil {
+		log.Fatal(err)
+		return trace, err
+	}
+	defer file.Close()
+
 	traceBuff := make([]float32, s.GetNrSamples())
 	byteBuff := make([]byte, s.GetNrSamples()*4)
 	trace.Data = traceBuff
 
 	trcHdrBuff := make([]byte, SEGY_TRACE_HDR_LEN)
-	bytesRead, err := s.file.Read(trcHdrBuff)
+	bytesRead, err := file.Read(trcHdrBuff)
 	if err != nil {
 		log.Fatal(err)
 		return trace, err
@@ -233,7 +246,7 @@ func (s *SegyFile) ReadTrace() (Trace, error) {
 		return trace, err
 	}
 
-	bytesRead, err = s.file.Read(byteBuff)
+	bytesRead, err = file.Read(byteBuff)
 	if err != nil {
 		log.Fatal(err)
 		return trace, err
@@ -250,5 +263,3 @@ func (s *SegyFile) ReadTrace() (Trace, error) {
 	// Then figure out the size of the data, and read it
 	return trace, nil
 }
-
-//func (s *SegyFile) 
