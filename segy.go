@@ -5,10 +5,10 @@ import (
 	"encoding/binary"
 	"io/ioutil"
 	//"log"
-	"os"
-	"unsafe"
-	"reflect"
 	"github.com/op/go-logging"
+	"os"
+	"reflect"
+	"unsafe"
 )
 
 var log = logging.MustGetLogger("segygo")
